@@ -1,11 +1,17 @@
-import {Bot, Context} from 'grammy';
+import {Bot, Context, InlineKeyboard} from 'grammy';
+import {hydrate, HydrateFlavor} from '@grammyjs/hydrate';
+
 import dotenv from 'dotenv';
 import {errHandler} from './shared/utils/errors';
 import {commands} from './shared/data/commands';
-import {containsBadWords} from './shared/data/regs';
+import {detectBadWords} from './shared/data/regs';
+import {backBtn, startBtns} from './shared/utils/buttons';
+import {MyContext} from './shared/types/common.types';
+
 dotenv.config();
 
-const bot: Bot = new Bot(String(process.env.TOKEN));
+const bot = new Bot<MyContext>(String(process.env.TOKEN));
+bot.use(hydrate());
 
 bot.api.setMyCommands(commands);
 
@@ -17,10 +23,43 @@ bot.command('start', async ctx => {
 
   if (!msg_id) return;
 
-  await ctx.api.deleteMessage(id, msg_id);
-  await ctx.reply(
-    `Welcome ${ctx.message?.from.first_name}!\nWrite your login:`,
-  );
+  try {
+    await ctx.api.deleteMessage(id, msg_id);
+    await ctx.reply(`Welcome ${ctx.message?.from.first_name}!\n`, {
+      reply_markup: startBtns,
+    });
+  } catch (error) {
+    console.error('Error while deleting message:', error);
+  }
+});
+
+bot.on('callback_query:data', async ctx => {
+  if (!ctx.msg || !ctx.msg.text) return;
+
+  const id: number = ctx.chat?.id || 0;
+  const msg_id: number = ctx.msg?.message_id ?? 0;
+
+  switch (ctx.callbackQuery.data) {
+    case 'login':
+      await ctx.callbackQuery.message?.editText(`Now I need your email: `, {
+        reply_markup: backBtn,
+      });
+      break;
+
+    case 'reg':
+      await ctx.callbackQuery.message?.editText(`Now I need your email: `, {
+        reply_markup: backBtn,
+      });
+      break;
+
+    case 'back':
+      await ctx.callbackQuery.message?.editText(
+        `Welcome ${ctx.chat?.first_name}! `,
+        {
+          reply_markup: startBtns,
+        },
+      );
+  }
 });
 
 bot.on('msg:text', async (ctx: Context) => {
@@ -29,14 +68,11 @@ bot.on('msg:text', async (ctx: Context) => {
   const id: number = ctx.chatId || 0;
   const msg_id: number = ctx.msg?.message_id ?? 0;
 
-  if (containsBadWords(ctx.msg.text)) {
-    return ctx.reply('👹 <b>Oi-Oi! Bad word!</b>', {
-      reply_parameters: {message_id: msg_id},
-      parse_mode: 'HTML',
-    });
-  }
+  const isBad = await detectBadWords({ctx, msg_id});
 
   try {
+    if (isBad) return;
+
     await ctx.api.deleteMessage(id, msg_id);
     await ctx.api.editMessageText(
       id,
