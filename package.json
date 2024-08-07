@@ -1,0 +1,23 @@
+{
+  "name": "convert-bot",
+  "version": "1.0.0",
+  "main": "bot.ts",
+  "author": "Kamaev Anton",
+  "license": "MIT",
+  "scripts": {
+    "dev": "cross-env DEBUG=grammy* nodemon --exec ts-node bot.ts",
+    "build": "tsc",
+    "start": "node dist/bot.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.1.0",
+    "cross-env": "^7.0.3",
+    "nodemon": "^3.1.4",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "grammy": "^1.28.0",
+    "ts-node": "^10.9.2"
+  }
+}
