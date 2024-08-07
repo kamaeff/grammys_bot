@@ -1,5 +1,4 @@
-import { Bot, GrammyError, HttpError } from "grammy";
-
+import {Bot, GrammyError, HttpError} from 'grammy';
 
 export const errHandler = (bot: Bot) => {
   bot.catch((err: any) => {
