@@ -11,7 +11,6 @@ bot.api.setMyCommands(commands);
 
 // TODO: сделать регу или логинацию по email (::email)
 // сделать через bot.hears реакцию на помоги => сделать вызов как в help (массив -> ['помоги','Помоги','help','Help'])
-// Сделать фильтрацию ругательств через регулярки
 bot.command('start', async ctx => {
   const id: number = ctx.chatId;
   const msg_id: number = ctx.msg?.message_id ?? 0;
@@ -31,7 +30,10 @@ bot.on('msg:text', async (ctx: Context) => {
   const msg_id: number = ctx.msg?.message_id ?? 0;
 
   if (containsBadWords(ctx.msg.text)) {
-    return ctx.reply('Bad word!');
+    return ctx.reply('👹 <b>Oi-Oi! Bad word!</b>', {
+      reply_parameters: {message_id: msg_id},
+      parse_mode: 'HTML',
+    });
   }
 
   try {
